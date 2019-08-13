@@ -73,4 +73,74 @@ for fname in fnames:
     shutil.copyfile(src, dst)
 
 
+test_images = []  #Test array of 5 random images for visualisation
+test_imgs = ['Parasitized{}.png'.format(i) for i in range(1,6)]
+for img in test_imgs:
+    path = os.path.join(train_parasitized_dir, img)
+    test_images.append(plt.imread(path))
 
+fig = plt.figure()  #Plot the 5 images of parasitized cells
+ax1 = fig.add_subplot(1,5,1)
+ax1.imshow(test_images[0])
+ax2 = fig.add_subplot(1,5,2)
+ax2.imshow(test_images[1])
+ax3 = fig.add_subplot(1,5,3)
+ax3.imshow(test_images[2])
+ax4 = fig.add_subplot(1,5,4)
+ax4.imshow(test_images[3])
+ax5 = fig.add_subplot(1,5,5)
+ax5.imshow(test_images[4])
+
+
+#MODEL BUILDING & COMPILING
+
+from keras import layers
+from keras import models
+
+model = models.Sequential()
+
+model.add(layers.Conv2D(32,(3,3),activation = 'relu', input_shape=(64,64,3)))
+model.add(layers.MaxPooling2D(2,2))
+model.add(layers.Conv2D(64, (3,3), activation = 'relu'))
+model.add(layers.Dropout(0.2))
+model.add(layers.MaxPooling2D((2,2)))
+model.add(layers.Conv2D(64, (3,3), activation = 'relu'))
+model.add(layers.MaxPooling2D((2,2)))
+model.add(layers.Dropout(0.2))
+model.add(layers.Conv2D(64, (3,3), activation = 'relu'))
+model.add(layers.MaxPooling2D((2,2)))
+model.add(layers.Flatten())
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(256, activation = 'relu'))
+model.add(layers.Dense(1, activation = 'sigmoid'))
+
+model.compile(loss='binary_crossentropy',
+              optimizer='adam',
+              metrics=['acc'])
+
+#BUILDING TRAIN & VALIDATION GENERATORS FOR DATA AUGMENTATION
+
+from keras.preprocessing.image import ImageDataGenerator
+
+train_datagen = ImageDataGenerator(rescale = 1./255,
+                                   rotation_range=40,
+                                   width_shift_range=0.2,
+                                   height_shift_range=0.2,
+                                   shear_range=0.2,
+                                   zoom_range=0.2,
+                                   horizontal_flip=True,
+                                   fill_mode='nearest')
+
+train_generator = train_datagen.flow_from_directory(
+    train_dir,
+    target_size = (64,64),
+    batch_size = 20,
+    class_mode = 'binary')
+
+validation_datagen = ImageDataGenerator(rescale = 1./255)
+
+validation_generator = validation_datagen.flow_from_directory(
+    validation_dir,
+    target_size = (64,64),
+    batch_size = 20,
+    class_mode = 'binary')
