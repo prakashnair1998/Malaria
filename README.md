@@ -1,3 +1,3 @@
-# learn
-Repo for personal learning  
-Begin with Titanic dataset to predict deaths
+# Project 
+
+Deep learning to identify Malaria cells using CNN (Python)
